@@ -15,8 +15,8 @@ import { load as loadYaml, dump as dumpYaml } from "js-yaml";
 import { homedir } from "os";
 import { dirname, join, extname, resolve as resolvePath } from "path";
 
-export const DEFAULT_AGENTIC_MODEL = "o4-mini";
-export const DEFAULT_FULL_CONTEXT_MODEL = "gpt-4.1";
+export const DEFAULT_AGENTIC_MODEL = "gemini-2.0-flash";
+export const DEFAULT_FULL_CONTEXT_MODEL = "gemini-2.5-pro-preview-03-25";
 export const DEFAULT_APPROVAL_MODE = AutoApprovalMode.SUGGEST;
 export const DEFAULT_INSTRUCTIONS = "";
 
@@ -31,9 +31,6 @@ export const CONFIG_YML_FILEPATH = join(CONFIG_DIR, "config.yml");
 export const CONFIG_FILEPATH = CONFIG_JSON_FILEPATH;
 export const INSTRUCTIONS_FILEPATH = join(CONFIG_DIR, "instructions.md");
 
-export const OPENAI_TIMEOUT_MS =
-  parseInt(process.env["OPENAI_TIMEOUT_MS"] || "0", 10) || undefined;
-export const OPENAI_BASE_URL = process.env["OPENAI_BASE_URL"] || "";
 export let GOOGLE_API_KEY = process.env["GOOGLE_API_KEY"] || "";
 
 export function setApiKey(apiKey: string): void {

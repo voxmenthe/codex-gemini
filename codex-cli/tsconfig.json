@@ -29,8 +29,8 @@
     "useDefineForClassFields": true,
     "forceConsistentCasingInFileNames": true,
     "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "experimentalSpecifierResolution": "node"
+    "noEmit": true
+    // (removed experimentalSpecifierResolution to support ts-node compilation)
   },
   "include": ["src", "tests", "scripts/test-genai.ts"]
 }

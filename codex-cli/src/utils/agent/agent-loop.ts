@@ -1,32 +1,13 @@
 import type { ReviewDecision } from "./review.js";
 import type { ApplyPatchCommand, ApprovalPolicy } from "../../approvals.js";
 import type { AppConfig } from "../config.js";
-import type {
-  ResponseFunctionToolCall,
-  ResponseInputItem,
-  ResponseItem,
-} from "openai/resources/responses/responses.mjs";
-import type { Reasoning } from "openai/resources.mjs";
 
 import { log, isLoggingEnabled } from "./log.js";
-import { OPENAI_BASE_URL, OPENAI_TIMEOUT_MS } from "../config.js";
-import { parseToolCallArguments } from "../parsers.js";
-import {
-  ORIGIN,
-  CLI_VERSION,
-  getSessionId,
-  setCurrentModel,
-  setSessionId,
-} from "../session.js";
+import { getSessionId, setCurrentModel, setSessionId } from "../session.js";
 import { handleExecCommand } from "./handle-exec-command.js";
 import { randomUUID } from "node:crypto";
-import { genai, chat } from "../genai";
-
-// Wait time before retrying after rate limit errors (ms).
-const RATE_LIMIT_RETRY_WAIT_MS = parseInt(
-  process.env["OPENAI_RATE_LIMIT_RETRY_WAIT_MS"] || "2500",
-  10,
-);
+import { genai, chat } from "../genai.js";
+import { parseToolCallArguments } from "../parsers.js";
 
 export type CommandConfirmation = {
   review: ReviewDecision;
@@ -41,7 +22,7 @@ type AgentLoopParams = {
   config?: AppConfig;
   instructions?: string;
   approvalPolicy: ApprovalPolicy;
-  onItem: (item: ResponseItem) => void;
+  onItem: (item: any) => void;
   onLoading: (loading: boolean) => void;
 
   /** Called when the command is not auto-approved to request explicit user review. */
@@ -58,14 +39,7 @@ export class AgentLoop {
   private approvalPolicy: ApprovalPolicy;
   private config: AppConfig;
 
-  // Using `InstanceType<typeof OpenAI>` sidesteps typing issues with the OpenAI package under
-  // the TS 5+ `moduleResolution=bundler` setup. OpenAI client instance. We keep the concrete
-  // type to avoid sprinkling `any` across the implementation while still allowing paths where
-  // the OpenAI SDK types may not perfectly match. The `typeof OpenAI` pattern captures the
-  // instance shape without resorting to `any`.
-  private oai: OpenAI;
-
-  private onItem: (item: ResponseItem) => void;
+  private onItem: (item: any) => void;
   private onLoading: (loading: boolean) => void;
   private getCommandConfirmation: (
     command: Array<string>,
@@ -258,8 +232,8 @@ export class AgentLoop {
   }
 
   private async handleFunctionCall(
-    item: ResponseFunctionToolCall,
-  ): Promise<Array<ResponseInputItem>> {
+    item: any,
+  ): Promise<Array<any>> {
     // If the agent has been canceled in the meantime we should not perform any
     // additional work. Returning an empty array ensures that we neither execute
     // the requested tool call nor enqueue any follow‑up input items. This keeps
@@ -309,7 +283,7 @@ export class AgentLoop {
     }
 
     if (args == null) {
-      const outputItem: ResponseInputItem.FunctionCallOutput = {
+      const outputItem: any = {
         type: "function_call_output",
         call_id: item.call_id,
         output: `invalid arguments: ${rawArguments}`,
@@ -317,7 +291,7 @@ export class AgentLoop {
       return [outputItem];
     }
 
-    const outputItem: ResponseInputItem.FunctionCallOutput = {
+    const outputItem: any = {
       type: "function_call_output",
       // `call_id` is mandatory – ensure we never send `undefined` which would
       // trigger the "No tool output found…" 400 from the API.
@@ -337,7 +311,7 @@ export class AgentLoop {
     // below in the `flush()` helper).
 
     // used to tell model to stop if needed
-    const additionalItems: Array<ResponseInputItem> = [];
+    const additionalItems: Array<any> = [];
 
     // TODO: allow arbitrary function calls (beyond shell/container.exec)
     if (name === "container.exec" || name === "shell") {
@@ -363,13 +337,13 @@ export class AgentLoop {
   }
 
   public async run(
-    input: Array<ResponseInputItem>,
+    input: Array<any>,
     previousResponseId: string = "",
   ): Promise<void> {
     this.onLoading(true);
     // Build prompt from prior messages
     const messageItems = input.filter(
-      (item): item is ResponseInputItem.Message => item.type === "message"
+      (item): item is any => item.type === "message"
     );
     const prompt = messageItems
       .map((item) => item.content.map((c: any) => c.text).join(""))
@@ -381,14 +355,14 @@ export class AgentLoop {
         type: "message",
         role: "assistant",
         content: [{ type: "output_text", text: responseText }],
-      } as ResponseItem);
+      } as any);
     } catch (err) {
       this.onItem({
         id: `error-${Date.now()}`,
         type: "message",
         role: "assistant",
         content: [{ type: "output_text", text: `Error: ${err}` }],
-      } as ResponseItem);
+      } as any);
     } finally {
       this.onLoading(false);
     }
@@ -396,9 +370,9 @@ export class AgentLoop {
 
   // we need until we can depend on streaming events
   private async processEventsWithoutStreaming(
-    output: Array<ResponseInputItem>,
-    emitItem: (item: ResponseItem) => void,
-  ): Promise<Array<ResponseInputItem>> {
+    output: Array<any>,
+    emitItem: (item: any) => void,
+  ): Promise<Array<any>> {
     // If the agent has been canceled we should short‑circuit immediately to
     // avoid any further processing (including potentially expensive tool
     // calls). Returning an empty array ensures the main run‑loop terminates
@@ -406,7 +380,7 @@ export class AgentLoop {
     if (this.canceled) {
       return [];
     }
-    const turnInput: Array<ResponseInputItem> = [];
+    const turnInput: Array<any> = [];
     for (const item of output) {
       if (item.type === "function_call") {
         if (alreadyProcessedResponses.has(item.id)) {
@@ -417,7 +391,7 @@ export class AgentLoop {
         const result = await this.handleFunctionCall(item);
         turnInput.push(...result);
       }
-      emitItem(item as ResponseItem);
+      emitItem(item as any);
     }
     return turnInput;
   }

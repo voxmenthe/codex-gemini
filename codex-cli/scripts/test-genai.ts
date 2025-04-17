@@ -1,5 +1,5 @@
 #!/usr/bin/env ts-node-esm
-import { chat, chatStream } from "../src/utils/genai";
+import { chat, chatStream } from "../src/utils/genai.ts";
 
 async function main() {
   const prompt = process.argv.slice(2).join(" ") || "Say hello";
@@ -12,7 +12,8 @@ async function main() {
   // streamed (optional)
   console.log("→ Response (stream):");
   for await (const part of chatStream(prompt)) {
-    process.stdout.write(part.text ?? part.content ?? "");
+    const chunk: any = part;
+    process.stdout.write(chunk.text ?? JSON.stringify(chunk));
   }
   console.log();
 }
