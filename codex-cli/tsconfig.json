@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "outDir": "dist",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "target": "esnext",
     "lib": [
       "DOM",
@@ -28,7 +28,9 @@
     "noEmitOnError": true,
     "useDefineForClassFields": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+    // (removed experimentalSpecifierResolution to support ts-node compilation)
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "scripts/test-genai.ts"]
 }

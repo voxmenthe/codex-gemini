@@ -1,8 +1,8 @@
-import { OPENAI_API_KEY } from "./config";
-import OpenAI from "openai";
+import { GOOGLE_API_KEY } from "./config";
+import { genai } from "./genai";
 
 const MODEL_LIST_TIMEOUT_MS = 2_000; // 2 seconds
-export const RECOMMENDED_MODELS: Array<string> = ["o4-mini", "o3"];
+export const RECOMMENDED_MODELS: Array<string> = ["gemini-2.0-flash", "gemini-1.5-pro"];
 
 /**
  * Background model loader / cache.
@@ -15,26 +15,8 @@ export const RECOMMENDED_MODELS: Array<string> = ["o4-mini", "o3"];
 let modelsPromise: Promise<Array<string>> | null = null;
 
 async function fetchModels(): Promise<Array<string>> {
-  // If the user has not configured an API key we cannot hit the network.
-  if (!OPENAI_API_KEY) {
-    return RECOMMENDED_MODELS;
-  }
-
-  try {
-    const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-    const list = await openai.models.list();
-
-    const models: Array<string> = [];
-    for await (const model of list as AsyncIterable<{ id?: string }>) {
-      if (model && typeof model.id === "string") {
-        models.push(model.id);
-      }
-    }
-
-    return models.sort();
-  } catch {
-    return [];
-  }
+  // Gemini SDK does not yet support listing; return static list.
+  return RECOMMENDED_MODELS;
 }
 
 export function preloadModels(): void {

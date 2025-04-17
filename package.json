@@ -6,6 +6,12 @@
     "format:fix": "prettier --write *.json *.md .github/workflows/*.yml"
   },
   "devDependencies": {
-    "prettier": "^3.5.3"
+    "@types/node": "^22.14.1",
+    "prettier": "^3.5.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@google/genai": "^0.8.0"
   }
 }
